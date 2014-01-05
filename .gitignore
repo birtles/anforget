@@ -1,0 +1,11 @@
+# Editor junk
+*.tmp
+*.bak
+*.swp
+*~
+
+# Filesystem junk
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
