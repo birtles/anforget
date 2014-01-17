@@ -1,3 +1,5 @@
+"use strict";
+
 define(['core/core', 'jquery'], function(Anforget) {
   function init() {
     console.log("init!");
