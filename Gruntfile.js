@@ -31,11 +31,19 @@ module.exports = function(grunt) {
           include: 'requireLib'
         }
       }
+    },
+    jshint: {
+      options: {
+        // r.js build profiles aren't proper functions
+        ignores: [ '**/*.build.js' ]
+      },
+      all: ['Gruntfile.js', 'src/app/**/*.js', 'src/core/**/*.js' ]
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-requirejs');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   // Default task(s).
-  grunt.registerTask('default', ['requirejs']);
+  grunt.registerTask('default', ['jshint', 'requirejs']);
 };

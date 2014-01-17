@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 define([], function() {
+  'use strict';
+
   // Sync ctor
   return function (username, password) {
     return {
       username: username,
       password: password
     };
-  }
+  };
 });
