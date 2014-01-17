@@ -1,6 +1,7 @@
 ({
   // Basic setup
-  mainConfigFile: "config.js",
+  baseUrl: "../lib",
+  mainConfigFile: "app.config.js",
 
   // Optimization
   optimize: "uglify2",
@@ -10,7 +11,7 @@
     output: { beautify: true },
   },
   name: "app/app",
-  out: "../lib-built/anforget.js",
+  out: "../../www/js/anforget.js",
 
   // Allow use strict since we're only targetting newer browsers
   useStrict: true,

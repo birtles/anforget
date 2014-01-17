@@ -1,7 +1,9 @@
 require.config({
-  baseUrl: '../lib',
+  // baseUrl is relative to where this file is included from which, in this case
+  // is www/
+  baseUrl: '../src/lib',
   paths: {
-    core: '../lib-built/anforget-lib',
+    core: '../core',
     app: '../app',
     jquery: 'jquery/jquery-2.0.3'
   }

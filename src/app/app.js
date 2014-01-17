@@ -1,6 +1,8 @@
-define(['core', 'jquery'], function(Anforget) {
+define(['core/core', 'jquery'], function(Anforget) {
   function init() {
-  };
+    console.log("init!");
+    console.log(Anforget);
+  }
 
   return {
     init: init
