@@ -37,7 +37,9 @@ module.exports = function(grunt) {
         // r.js build profiles aren't proper functions
         ignores: [ '**/*.build.js' ],
         indent: 2,
-        quotmark: 'single'
+        quotmark: 'single',
+        unused: true,
+        trailing: true,
       },
       all: ['Gruntfile.js', 'src/app/**/*.js', 'src/core/**/*.js' ]
     }

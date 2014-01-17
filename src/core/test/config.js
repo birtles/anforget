@@ -12,7 +12,7 @@ require.config({
         QUnit.config.autostart = false;
         QUnit.init();
       }
-    } 
+    }
   }
 });
 
