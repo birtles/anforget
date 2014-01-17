@@ -6,13 +6,13 @@ require.config({
     jquery: 'jquery/jquery-2.0.3'
   },
   shim: {
-     'qunit': {
-         exports: 'QUnit',
-         init: function() {
-             QUnit.config.autostart = false;
-             QUnit.init();
-         }
-     } 
+    'qunit': {
+      exports: 'QUnit',
+      init: function() {
+        QUnit.config.autostart = false;
+        QUnit.init();
+      }
+    } 
   }
 });
 

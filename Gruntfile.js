@@ -35,7 +35,8 @@ module.exports = function(grunt) {
     jshint: {
       options: {
         // r.js build profiles aren't proper functions
-        ignores: [ '**/*.build.js' ]
+        ignores: [ '**/*.build.js' ],
+        indent: 2
       },
       all: ['Gruntfile.js', 'src/app/**/*.js', 'src/core/**/*.js' ]
     }
