@@ -1,3 +1,6 @@
+// Keep these options in sync with those in /Gruntfile.js
+//
+// Run by hand using node.js -o app.build.js
 ({
   // Basic setup
   mainConfigFile: "config.js",
