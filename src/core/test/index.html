@@ -4,6 +4,19 @@
   <meta charset="utf-8">
   <title>Core unit tests</title>
   <link rel="stylesheet" href="../../lib/test/qunit/qunit-1.13.0.css">
+  <!--
+     We would like to load QUnit using require.js but unfortunately that means
+     it gets loaded too late for the PhantomJS-QUnit bridge to be hooked in.
+    -->
+  <script src='../../lib/test/qunit/qunit-1.13.0.js'></script>
+  <!--
+     On the other hand, since we are loading the other tests asynchronously we
+     need to delay the start of the test suite until they get loaded.
+     QUnit.start() is triggered in config.js
+    -->
+  <script>
+    QUnit.config.autostart = false;
+  </script>
 </head>
 <body>
 <div id="qunit"></div>
