@@ -17,9 +17,6 @@ module.exports = function(grunt) {
           optimize: 'uglify2',
           generateSourceMaps: true,
           preserveLicenseComments: false,
-          uglify2: {
-            output: { beautify: true },
-          },
           name: 'app/app',
           out: 'www/js/<%= pkg.name %>.js',
 
