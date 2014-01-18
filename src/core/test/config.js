@@ -8,4 +8,9 @@ require.config({
 
 require(['core/test/sync'], function() {
   QUnit.start();
+
+  // For exposing results to Sauce Labs
+  QUnit.done(function(results){
+    window.global_test_results = results;
+  });
 });

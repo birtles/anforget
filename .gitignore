@@ -12,3 +12,6 @@ $RECYCLE.BIN/
 
 # Node junk
 node_modules/
+
+# Sauce Labs junk
+sauce_connect.log

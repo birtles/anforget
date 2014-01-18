@@ -47,6 +47,42 @@ module.exports = function(grunt) {
 
     qunit: {
       files: ['src/core/test/index.html']
+    },
+
+    connect: {
+      'unit-test-server': {
+        options: {
+          port: 3000,
+          base: 'src'
+        }
+      }
+    },
+
+    'saucelabs-qunit': {
+      all: {
+        options: {
+          urls: [ 'http://localhost:3000/core/test/index.html' ],
+          testname: 'Anforget unit tests',
+          build: process.env.TRAVIS_BUILD_NUMBER || '(Local)',
+          browsers: [{
+            browserName: 'firefox',
+            version: '26',
+            platform: 'WIN7'
+          }, {
+            browserName: 'chrome',
+            version: '31',
+            platform: 'Windows 8.1'
+          }, {
+            browserName: 'internet explorer',
+            version: '11',
+            platform: 'Windows 8.1'
+          }, {
+            browserName: 'iphone',
+            version: '6.0',
+            platform: 'OS X 10.8'
+          }]
+        }
+      }
     }
   });
 
@@ -54,8 +90,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-requirejs');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-qunit');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-saucelabs');
 
   // Tasks
   grunt.registerTask('default', ['jshint', 'requirejs']);
-  grunt.registerTask('test', ['qunit']);
+
+  var testTasks = [ 'jshint', 'requirejs', 'qunit' ];
+  if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined') {
+    testTasks.push('connect:unit-test-server', 'saucelabs-qunit');
+  } else {
+    console.log('No Sauce Labs key found, skipping Sauce Labs test');
+  }
+  grunt.registerTask('test', testTasks);
 };
