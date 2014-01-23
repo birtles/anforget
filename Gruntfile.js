@@ -95,6 +95,7 @@ module.exports = function(grunt) {
 
   // Tasks
   grunt.registerTask('default', ['jshint', 'requirejs']);
+  grunt.registerTask('test', ['jshint', 'qunit']);
 
   var testTasks = [ 'jshint', 'requirejs', 'qunit' ];
   if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined') {
@@ -102,5 +103,5 @@ module.exports = function(grunt) {
   } else {
     console.log('No Sauce Labs key found, skipping Sauce Labs test');
   }
-  grunt.registerTask('test', testTasks);
+  grunt.registerTask('full-test', testTasks);
 };
