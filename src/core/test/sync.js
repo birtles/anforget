@@ -30,7 +30,11 @@ define(['core/sync', 'sinonjs'], function(SyncConnection, sinon) {
     conn.sync();
     equal(server.requests[0].method, 'POST');
     deepEqual(JSON.parse(server.requests[0].requestBody),
-              { username: 'abc', password: 'def' });
+              { u: 'abc', p: 'def' });
+
+    server.requests[0].respond(200,
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ key: 'ghi' }));
 
     // XXX Test that if there is no error we don't call hostKey twice
   });

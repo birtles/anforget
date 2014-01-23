@@ -25,8 +25,8 @@ define(['jquery'], function($) {
           accepts: 'application/json',
           contentType: 'application/json',
           type: 'POST',
-          data: JSON.stringify({ username: server.username,
-                                 password: server.password })
+          data: JSON.stringify({ u: server.username,
+                                 p: server.password })
         }).done(function(key) {
           this.hostKey = key;
           doSync();
