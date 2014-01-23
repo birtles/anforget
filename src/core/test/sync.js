@@ -1,8 +1,37 @@
-define(['core/sync'], function(Sync) {
-  QUnit.module('Sync tests');
-  test('Test ctor', function() {
-    var sync = new Sync('a', 'b');
-    strictEqual(sync.username, 'a');
-    strictEqual(sync.password, 'b');
+define(['core/sync', 'sinonjs'], function(SyncConnection, sinon) {
+  var server;
+
+  QUnit.module('Sync tests', {
+    setup: function() {
+      server = sinon.fakeServer.create();
+    },
+    teardown: function() {
+      server.restore();
+    }
+  });
+
+  test('Server trailing slash', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/' });
+    conn.sync();
+    equal(server.requests[0].url, 'http://localhost/hostKey',
+          'Trailing slash in server URL is ok');
+
+    conn = new SyncConnection({ url: 'http://localhost' });
+    conn.sync();
+    equal(server.requests[1].url, 'http://localhost/hostKey',
+          'No trailing slash in server URL is ok');
+  });
+
+  test('Test get host key', function() {
+    var conn = new SyncConnection(
+      { url: 'http://localhost/',
+        username: 'abc',
+        password: 'def' });
+    conn.sync();
+    equal(server.requests[0].method, 'POST');
+    deepEqual(JSON.parse(server.requests[0].requestBody),
+              { username: 'abc', password: 'def' });
+
+    // XXX Test that if there is no error we don't call hostKey twice
   });
 });
