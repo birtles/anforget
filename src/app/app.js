@@ -6,8 +6,7 @@ define(['core/core', 'jquery'], function(Anforget) {
   'use strict';
 
   function init() {
-    console.log('init!');
-    console.log(Anforget);
+    Anforget.sync();
   }
 
   return {
