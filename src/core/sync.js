@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-define(['jquery'], function($) {
+define(['jquery', 'gzip'], function($, gzip) {
   'use strict';
 
   // Sync ctor
@@ -20,13 +20,19 @@ define(['jquery'], function($) {
       // XXX Test that on calling twice hostKey only gets called once
       // XXX Test timeouts
       // XXX Test for all sorts of errors here
+      var formData = new FormData();
+      formData.append('c', '1');
+      var zipped = new Uint8Array(gzip.zip(JSON.stringify(
+                      { u: server.username, p: server.password })));
+      var data = new Blob([zipped]);
+      formData.append('data', data, 'data');
+
       if (!this.hostKey) {
         $.ajax(this.serverUrl + '/hostKey', {
-          accepts: 'application/json',
-          contentType: 'application/json',
           type: 'POST',
-          data: JSON.stringify({ u: server.username,
-                                 p: server.password })
+          contentType: false,
+          processData: false,
+          data: formData
         }).done(function(key) {
           this.hostKey = key;
           doSync();
