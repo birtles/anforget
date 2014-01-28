@@ -22,9 +22,7 @@ define(['jquery', 'gzip'], function($, gzip) {
       // XXX Test for all sorts of errors here
       var formData = new FormData();
       formData.append('c', '1');
-      var zipped = new Uint8Array(gzip.zip(JSON.stringify(
-                      { u: server.username, p: server.password })));
-      var data = new Blob([zipped]);
+      var data = makeBlob({ u: server.username, p: server.password });
       formData.append('data', data, 'data');
 
       if (!this.hostKey) {
@@ -44,6 +42,23 @@ define(['jquery', 'gzip'], function($, gzip) {
       function doSync (/*collection, syncLog*/) {
       }
     };
+
+    // Makes a blob from object by first JSONifying the object and then
+    // gzipping it
+    function makeBlob(obj) {
+      var zipped = new Uint8Array(gzip.zip(JSON.stringify(obj)));
+      if (typeof(Blob) == typeof(Function)) {
+        return new Blob([zipped]);
+      }
+      // phantomjs doesn't support the Blob ctor so use BlobBuilder instead
+      var BlobBuilder = window.BlobBuilder ||
+                        window.WebKitBlobBuilder ||
+                        window.MozBlobBuilder ||
+                        window.MSBlobBuilder;
+      var builder = new BlobBuilder();
+      builder.append([zipped]);
+      return builder.getBlob();
+    }
 
     this.cancel = function () {
       // XXX Write me
