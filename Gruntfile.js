@@ -64,6 +64,7 @@ module.exports = function(grunt) {
           urls: [ 'http://localhost:3000/core/test/index.html' ],
           testname: 'Anforget unit tests',
           build: process.env.TRAVIS_BUILD_NUMBER || '(Local)',
+          'public': 'public',
           browsers: [{
             browserName: 'firefox',
             version: '26',
