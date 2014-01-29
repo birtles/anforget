@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-define(['jquery', 'gzip'], function($, gzip) {
+define(['jquery', 'gzip', 'Blob'], function($, gzip) {
   'use strict';
 
   // Sync ctor
@@ -14,7 +14,7 @@ define(['jquery', 'gzip'], function($, gzip) {
     this.serverUrl = (server.url.substr(-1) == '/') ?
                      server.url.substr(0, server.url.length - 1) :
                      server.url;
- 
+
     this.sync = function (/*collection, syncLog*/) {
       // First get host key if we don't already have one
       // XXX Test that on calling twice hostKey only gets called once
@@ -46,18 +46,11 @@ define(['jquery', 'gzip'], function($, gzip) {
     // Makes a blob from object by first JSONifying the object and then
     // gzipping it
     function makeBlob(obj) {
-      var zipped = new Uint8Array(gzip.zip(JSON.stringify(obj)));
-      if (typeof(Blob) == typeof(Function)) {
-        return new Blob([zipped]);
-      }
-      // phantomjs doesn't support the Blob ctor so use BlobBuilder instead
-      var BlobBuilder = window.BlobBuilder ||
-                        window.WebKitBlobBuilder ||
-                        window.MozBlobBuilder ||
-                        window.MSBlobBuilder;
-      var builder = new BlobBuilder();
-      builder.append([zipped]);
-      return builder.getBlob();
+      return new Blob(
+          [
+            new Uint8Array(gzip.zip(JSON.stringify(obj)))
+          ]
+        );
     }
 
     this.cancel = function () {
