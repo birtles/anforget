@@ -47,9 +47,7 @@ define(['jquery', 'gzip', 'Blob'], function($, gzip) {
     // gzipping it
     function makeBlob(obj) {
       return new Blob(
-          [
-            new Uint8Array(gzip.zip(JSON.stringify(obj)))
-          ]
+          [new Uint8Array(gzip.zip(JSON.stringify(obj)))]
         );
     }
 
