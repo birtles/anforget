@@ -14,7 +14,7 @@ define(['core/sync', 'sinonjs', 'gzip'], function(SyncConnection, sinon, gzip) {
 
   QUnit.module('Sync tests', {
     setup: function() {
-      if (typeof FormData != "function" && typeof FormData != "object") {
+      if (typeof FormData != 'function' && typeof FormData != 'object') {
         // There should be an existing implementation of FormData even if it is
         // only a polyfilled one. Otherwise, subbing in a mock object here would
         // mask a compatibility issue.
@@ -73,7 +73,7 @@ define(['core/sync', 'sinonjs', 'gzip'], function(SyncConnection, sinon, gzip) {
     };
     reader.onerror = function() {
       ok(false, 'error reading blob');
-    }
+    };
     // Call start regardless of failure or success
     reader.onloadend = function() {
       start();

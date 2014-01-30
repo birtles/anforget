@@ -47,8 +47,8 @@ define(['jquery', 'gzip'], function($, gzip) {
     // gzipping it
     function makeBlob(obj) {
       // Feature testing Blob support is a real pain.
-      // - Safari on iOS 6 supports the Blob constructor but with type "object"
-      // - However, Safari 5 also reports typeof(Blob) as "object" despite not
+      // - Safari on iOS 6 supports the Blob constructor but with type 'object'
+      // - However, Safari 5 also reports typeof(Blob) as 'object' despite not
       //   supporting the Blob constructor or WebKitBlobConstructor.
       // - PhantomJS, however, does not support the Blob constructor but *does*
       //   support WebKitBlobConstructor.
@@ -60,7 +60,7 @@ define(['jquery', 'gzip'], function($, gzip) {
       try {
         return new Blob([dataArray]);
       } catch (e) {
-        if (typeof(WebKitBlobBuilder) == "object") {
+        if (typeof(WebKitBlobBuilder) == 'object') {
           var builder = new WebKitBlobBuilder();
           // The version of WebKit in phantomjs doesn't actually allow an
           // ArrayBufferView to be passed into append, only an ArrayBuffer.
@@ -69,7 +69,7 @@ define(['jquery', 'gzip'], function($, gzip) {
           builder.append(dataArray.buffer);
           return builder.getBlob();
         } else {
-          throw "No Blob support";
+          throw 'No Blob support';
         }
       }
     }
