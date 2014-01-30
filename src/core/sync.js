@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-define(['jquery', 'gzip', 'Blob'], function($, gzip) {
+define(['jquery', 'gzip'], function($, gzip) {
   'use strict';
 
   // Sync ctor
@@ -46,9 +46,32 @@ define(['jquery', 'gzip', 'Blob'], function($, gzip) {
     // Makes a blob from object by first JSONifying the object and then
     // gzipping it
     function makeBlob(obj) {
-      return new Blob(
-          [new Uint8Array(gzip.zip(JSON.stringify(obj)))]
-        );
+      // Feature testing Blob support is a real pain.
+      // - Safari on iOS 6 supports the Blob constructor but with type "object"
+      // - However, Safari 5 also reports typeof(Blob) as "object" despite not
+      //   supporting the Blob constructor or WebKitBlobConstructor.
+      // - PhantomJS, however, does not support the Blob constructor but *does*
+      //   support WebKitBlobConstructor.
+      // - For other platforms which support neither we just fail because using
+      //   a polyfill Blob does not produce the correct result when passed to
+      //   FormData or FileReader etc.
+      var dataArray = new Uint8Array(gzip.zip(JSON.stringify(obj)));
+
+      try {
+        return new Blob([dataArray]);
+      } catch (e) {
+        if (typeof(WebKitBlobBuilder) == "object") {
+          var builder = new WebKitBlobBuilder();
+          // The version of WebKit in phantomjs doesn't actually allow an
+          // ArrayBufferView to be passed into append, only an ArrayBuffer.
+          // (If you pass in an ArrayBufferView it doesn't complain but the data
+          // is corrupt.)
+          builder.append(dataArray.buffer);
+          return builder.getBlob();
+        } else {
+          throw "No Blob support";
+        }
+      }
     }
 
     this.cancel = function () {
