@@ -58,7 +58,9 @@ define(['jquery', 'gzip'], function($, gzip) {
       var dataArray = new Uint8Array(gzip.zip(JSON.stringify(obj)));
 
       try {
-        return new Blob([dataArray]);
+        // Some versions on WebKit (at least iOS 6 Safari) only allow an
+        // ArrayBuffer and not an ArrayBuffer view here
+        return new Blob([dataArray.buffer]);
       } catch (e) {
         if (typeof(WebKitBlobBuilder) == 'object') {
           var builder = new WebKitBlobBuilder();
