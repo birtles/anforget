@@ -60,31 +60,33 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     var conn = new SyncConnection({ url: 'http://localhost/' });
     conn.sync();
     equal(server.requests[0].url, 'http://localhost/hostKey',
-          'Trailing slash in server URL is ok');
+          'allows trailing slash in server URL');
 
     conn = new SyncConnection({ url: 'http://localhost' });
     conn.sync();
     equal(server.requests[1].url, 'http://localhost/hostKey',
-          'No trailing slash in server URL is ok');
+          'allows no trailing slash in server URL');
   });
 
   asyncTest('Get host key', function() {
-    var conn = new SyncConnection(
-      { url: 'http://localhost/',
-        username: 'abc',
-        password: 'def' });
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' });
     conn.sync();
+
     equal(server.requests[0].method, 'POST', 'has post method');
     equal(server.requests[0].requestBody._data.length, 2,
           'has two items in the request');
     deepEqual(server.requests[0].requestBody._data[0],
-              { name: 'c', value: '1', filename: undefined });
-    deepEqual(server.requests[0].requestBody._data[1].name, 'data');
-    deepEqual(server.requests[0].requestBody._data[1].filename, 'data');
-    var blob = server.requests[0].requestBody._data[1].value;
+              { name: 'c', value: '1', filename: undefined },
+              'has correct c chunk');
+    var dataChunk = server.requests[0].requestBody._data[1];
+    deepEqual({ name: dataChunk.name, filename: dataChunk.filename },
+       { name: 'data', filename: 'data' },
+       'data chunk properties set correctly');
 
-    readBlob(blob).then(function(obj) {
-      deepEqual(obj, { u: 'abc', p: 'def' });
+    readBlob(dataChunk.value).then(function(obj) {
+      deepEqual(obj, { u: 'abc', p: 'def' }, 'username/password set correctly');
     }, function(err) {
       ok(false, err);
     }).then(function() {
