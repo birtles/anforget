@@ -3,7 +3,8 @@ require.config({
   paths: {
     core: '../core',
     jquery: 'jquery/jquery-2.0.3',
-    sinonjs: 'test/sinonjs/sinon-1.7.3'
+    sinonjs: 'test/sinonjs/sinon-1.7.3',
+    promise: 'promise-0.1.1'
   },
   shim: {
     sinonjs: { exports: 'sinon' }

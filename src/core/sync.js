@@ -59,7 +59,7 @@ define(['jquery', 'gzip'], function($, gzip) {
 
       try {
         // Some versions on WebKit (at least iOS 6 Safari) only allow an
-        // ArrayBuffer and not an ArrayBuffer view here
+        // ArrayBuffer and not an ArrayBufferView here
         return new Blob([dataArray.buffer]);
       } catch (e) {
         if (typeof(WebKitBlobBuilder) == 'object') {

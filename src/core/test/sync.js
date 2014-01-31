@@ -1,4 +1,5 @@
-define(['core/sync', 'sinonjs', 'gzip'], function(SyncConnection, sinon, gzip) {
+define(['core/sync', 'sinonjs', 'gzip', 'promise'],
+  function(SyncConnection, sinon, gzip) {
   var server;
 
   function MockFormData(form) {
@@ -8,6 +9,31 @@ define(['core/sync', 'sinonjs', 'gzip'], function(SyncConnection, sinon, gzip) {
     this.append = function(name, value, filename) {
       this._data.push({ name: name, value: value, filename: filename});
     };
+  }
+
+  // Takes a Blob containing a gzipped JSON string and returns a Promise which
+  // is resolved with the corresponding object
+  function readBlob(blob) {
+    return new Promise(function(resolve, reject) {
+
+      var reader = new FileReader();
+      // We'd like to use addEventListener but the version of WebKit in
+      // phantomjs only supports onload
+      reader.onload = function() {
+        try {
+          var unzipped = gzip.unzip(new Uint8Array(reader.result));
+          var json     = String.fromCharCode.apply(null,
+                           Array.prototype.slice.apply(unzipped));
+          resolve(JSON.parse(json));
+        } catch (e) {
+          reject(Error(e));
+        }
+      };
+      reader.onerror = function() {
+        reject(Error('Error reading blob'));
+      };
+      reader.readAsArrayBuffer(blob);
+    });
   }
 
   var existingFormData;
@@ -57,28 +83,13 @@ define(['core/sync', 'sinonjs', 'gzip'], function(SyncConnection, sinon, gzip) {
     deepEqual(server.requests[0].requestBody._data[1].filename, 'data');
     var blob = server.requests[0].requestBody._data[1].value;
 
-    var reader = new FileReader();
-    // We'd like to use addEventListener but the version of WebKit in phantomjs
-    // only supports onload
-    reader.onload = function() {
-      try {
-        var unzipped = gzip.unzip(new Uint8Array(reader.result));
-        var json = String.fromCharCode.apply(null,
-                     Array.prototype.slice.apply(unzipped));
-        var obj = JSON.parse(json);
-        deepEqual(obj, { u: 'abc', p: 'def' });
-      } catch (e) {
-        ok(false, e);
-      }
-    };
-    reader.onerror = function() {
-      ok(false, 'error reading blob');
-    };
-    // Call start regardless of failure or success
-    reader.onloadend = function() {
+    readBlob(blob).then(function(obj) {
+      deepEqual(obj, { u: 'abc', p: 'def' });
+    }, function(err) {
+      ok(false, err);
+    }).then(function() {
       start();
-    };
-    reader.readAsArrayBuffer(blob);
+    });
 
     // XXX Continue
     /*
