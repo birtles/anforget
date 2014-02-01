@@ -72,7 +72,9 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     var conn = new SyncConnection({ url: 'http://localhost/',
                                     username: 'abc',
                                     password: 'def' });
+    equal(conn.status, 'idle');
     var syncPromise = conn.sync();
+    equal(conn.status, 'logging-in');
 
     equal(server.requests[0].method, 'POST', 'has post method');
     equal(server.requests[0].requestBody._data.length, 2,
@@ -93,6 +95,7 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
       return syncPromise;
     }).then(function(returnedConn) {
       strictEqual(returnedConn, conn, 'returns connection object');
+      equal(conn.status, 'getting-summary');
     }).catch(function(err) {
       ok(false, err);
     }).then(function() {

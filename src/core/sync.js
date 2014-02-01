@@ -10,22 +10,29 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
     if (!(this instanceof SyncConnection))
       return new SyncConnection(server);
 
+    var conn = this;
+
     // Strip trailing slash from URL
     var serverUrl = (server.url.substr(-1) == '/') ?
                      server.url.substr(0, server.url.length - 1) :
                      server.url;
 
-    this.sync = function(/*collection, syncLog*/) {
-      var conn = this;
+    conn.status = 'idle';
+
+    conn.sync = function(/*collection, syncLog*/) {
       return new Promise(function(resolve, reject) {
         // First get host key if we don't already have one
+        conn.status = 'logging-in';
         var maybeGetHostKey = conn.hostKey ?
                               Promise.resolve(conn.hostKey) :
                               getHostKey();
         maybeGetHostKey.then(function(hostKey) {
           conn.hostKey = hostKey;
+          conn.status = 'getting-summary';
           resolve(conn);
         }).catch(function(err) {
+          // XXX Write test for this first
+          // this.status = 'idle';
           reject(err);
         });
       });
@@ -82,7 +89,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
       }
     }
 
-    this.cancel = function () {
+    conn.cancel = function () {
       // XXX Write me
     };
   };
