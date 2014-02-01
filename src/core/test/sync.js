@@ -62,8 +62,6 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     }).then(function() {
       equal(conn.status, 'getting-summary', 'getting-summary status');
       equal(server.requests.length, 2, 'makes next request');
-      equal(server.requests[1].url, 'http://localhost/meta',
-            'next request is meta');
       deepEqual(server.requests[1].requestBody._data[1],
                 { name: 'k', value: 'ghi', filename: undefined },
                 'uses returned hostKey for next request');
@@ -74,14 +72,39 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     });
   });
 
-  // XXX Test that if there is no error we don't call hostKey twice
-  // XXX Test that on the next request we get 'ghi' as the key
-  // XXX Test status
+  asyncTest('Get host key twice', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' });
+    conn.sync();
+    server.requests[0].respond(200,
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ key: 'ghi' }));
+    waitForStatusChange(conn).then(function() {
+      conn.sync();
+      return waitForStatusChange(conn);
+    }).then(function() {
+      // We should have one hostKey request followed by two meta requests
+      equal(server.requests.length, 3, 'requests correct number of times');
+      equal(server.requests[0].url, 'http://localhost/hostKey',
+            'first requests host key');
+      equal(server.requests[1].url, 'http://localhost/meta',
+            'then meta');
+      equal(server.requests[2].url, 'http://localhost/meta',
+            'on next attempt, skips to meta');
+    }).catch(function(err) {
+      ok(false, err);
+    }).then(function() {
+      start();
+    });
+  });
+
   // XXX Test timeout
+  // XXX Test overlapping requests
   // XXX Test for all sorts of errors
   // XXX Test cancelling
   // XXX Test cancelling at each stage
-  // XXX Test cancelling after finishing
+  // XXX Test cancelling when idle
 
   // ------------------------------------------------------------------
   // Test helpers
