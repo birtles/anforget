@@ -97,6 +97,7 @@ module.exports = function(grunt) {
   // Tasks
   grunt.registerTask('default', ['jshint', 'requirejs']);
   grunt.registerTask('test', ['jshint', 'qunit']);
+  grunt.registerTask('check', ['jshint', 'requirejs', 'qunit']);
 
   var testTasks = [ 'jshint', 'requirejs', 'qunit' ];
   if (typeof process.env.SAUCE_ACCESS_KEY !== 'undefined') {
