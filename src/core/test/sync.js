@@ -1,42 +1,8 @@
 define(['core/sync', 'sinonjs', 'gzip', 'promise'],
   function(SyncConnection, sinon, gzip) {
-  var server;
 
-  function MockFormData(form) {
-    this._form = form;
-    this._data = [];
-
-    this.append = function(name, value, filename) {
-      this._data.push({ name: name, value: value, filename: filename});
-    };
-  }
-
-  // Takes a Blob containing a gzipped JSON string and returns a Promise which
-  // is resolved with the corresponding object
-  function readBlob(blob) {
-    return new Promise(function(resolve, reject) {
-
-      var reader = new FileReader();
-      // We'd like to use addEventListener but the version of WebKit in
-      // phantomjs only supports onload
-      reader.onload = function() {
-        try {
-          var unzipped = gzip.unzip(new Uint8Array(reader.result));
-          var json     = String.fromCharCode.apply(null,
-                           Array.prototype.slice.apply(unzipped));
-          resolve(JSON.parse(json));
-        } catch (e) {
-          reject(Error(e));
-        }
-      };
-      reader.onerror = function() {
-        reject(Error('Error reading blob'));
-      };
-      reader.readAsArrayBuffer(blob);
-    });
-  }
-
-  var existingFormData;
+  var server,
+      existingFormData;
 
   QUnit.module('Sync tests', {
     setup: function() {
@@ -117,6 +83,44 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
   // XXX Test cancelling at each stage
   // XXX Test cancelling after finishing
 
+  // ------------------------------------------------------------------
+  // Test helpers
+  // ------------------------------------------------------------------
+
+  function MockFormData(form) {
+    this._form = form;
+    this._data = [];
+
+    this.append = function(name, value, filename) {
+      this._data.push({ name: name, value: value, filename: filename});
+    };
+  }
+
+  // Takes a Blob containing a gzipped JSON string and returns a Promise which
+  // is resolved with the corresponding object
+  function readBlob(blob) {
+    return new Promise(function(resolve, reject) {
+
+      var reader = new FileReader();
+      // We'd like to use addEventListener but the version of WebKit in
+      // phantomjs only supports onload
+      reader.onload = function() {
+        try {
+          var unzipped = gzip.unzip(new Uint8Array(reader.result));
+          var json     = String.fromCharCode.apply(null,
+                           Array.prototype.slice.apply(unzipped));
+          resolve(JSON.parse(json));
+        } catch (e) {
+          reject(Error(e));
+        }
+      };
+      reader.onerror = function() {
+        reject(Error('Error reading blob'));
+      };
+      reader.readAsArrayBuffer(blob);
+    });
+  }
+
   // Returns a Promise that resolves when the status of the passed in
   // SyncConnection changes.
   function waitForStatusChange(conn) {
@@ -135,5 +139,4 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
       retry();
     });
   }
-
 });
