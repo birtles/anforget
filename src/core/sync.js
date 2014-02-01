@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-define(['jquery', 'gzip'], function($, gzip) {
+define(['jquery', 'gzip', 'promise'], function($, gzip) {
   'use strict';
 
   // Sync ctor
@@ -15,33 +15,40 @@ define(['jquery', 'gzip'], function($, gzip) {
                      server.url.substr(0, server.url.length - 1) :
                      server.url;
 
-    this.sync = function (/*collection, syncLog*/) {
-      // First get host key if we don't already have one
-      // XXX Test that on calling twice hostKey only gets called once
-      // XXX Test timeouts
-      // XXX Test for all sorts of errors here
-      var formData = new FormData();
-      formData.append('c', '1');
-      var data = makeBlob({ u: server.username, p: server.password });
-      formData.append('data', data, 'data');
+    this.sync = function(/*collection, syncLog*/) {
+      var conn = this;
+      return new Promise(function(resolve, reject) {
+        // First get host key if we don't already have one
+        var maybeGetHostKey = conn.hostKey ?
+                              Promise.resolve(conn.hostKey) :
+                              getHostKey(conn);
+        maybeGetHostKey.then(function(hostKey) {
+          conn.hostKey = hostKey;
+          resolve(conn);
+        }).catch(function(err) {
+          reject(err);
+        });
+      });
+    };
 
-      if (!this.hostKey) {
-        $.ajax(this.serverUrl + '/hostKey', {
+    function getHostKey(conn) {
+      return new Promise(function(resolve) {
+        var formData = new FormData();
+        formData.append('c', '1');
+        var data = makeBlob({ u: server.username, p: server.password });
+        formData.append('data', data, 'data');
+
+        $.ajax(conn.serverUrl + '/hostKey', {
           type: 'POST',
           contentType: false,
           processData: false,
           data: formData
         }).done(function(key) {
-          this.hostKey = key;
-          doSync();
+          conn.hostKey = key;
+          resolve(conn.hostKey);
         });
-      } else {
-        doSync();
-      }
-
-      function doSync (/*collection, syncLog*/) {
-      }
-    };
+      });
+    }
 
     // Makes a blob from object by first JSONifying the object and then
     // gzipping it
