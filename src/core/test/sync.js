@@ -92,6 +92,7 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
       server.requests[0].respond(200,
         { 'Content-Type': 'application/json' },
         JSON.stringify({ key: 'ghi' }));
+      return waitForStatusChange(conn);
     }).then(function() {
       equal(conn.status, 'getting-summary', 'getting-summary status');
       equal(server.requests.length, 2, 'makes next request');
@@ -115,4 +116,24 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
   // XXX Test cancelling
   // XXX Test cancelling at each stage
   // XXX Test cancelling after finishing
+
+  // Returns a Promise that resolves when the status of the passed in
+  // SyncConnection changes.
+  function waitForStatusChange(conn) {
+    var originalStatus = conn.status;
+    var tries = 3;
+    return new Promise(function (resolve, reject) {
+      var retry = function() {
+        if (conn.status != originalStatus) {
+          resolve(conn.status);
+        }
+        if (!--tries) {
+          reject('No status change');
+        }
+        window.setTimeout(retry, 0);
+      };
+      retry();
+    });
+  }
+
 });

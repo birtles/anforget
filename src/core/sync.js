@@ -30,54 +30,53 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
           resolve(conn);
         }).catch(function(err) {
           // XXX Write test for this first
-          // this.status = 'idle';
+          // conn.status = 'idle';
           reject(err);
         });
       });
     };
 
+    // Returns a Promise that resolves to the host key
     function getHostKey() {
-      return new Promise(function(resolve) {
-        if (conn.hostKey) {
-          resolve(conn.hostKey);
-          return;
-        }
+      if (conn.hostKey) {
+        return Promise.resolve(conn.hostKey);
+      }
 
-        var formData = new FormData();
-        formData.append('c', '1');
-        var data = makeBlob({ u: server.username, p: server.password });
-        formData.append('data', data, 'data');
-
-        $.ajax(serverUrl + '/hostKey', {
-          type: 'POST',
-          contentType: false,
-          processData: false,
-          data: formData
-        }).done(function(key) {
+      return makeRequest('hostKey', { u: server.username, p: server.password })
+        .then(function(response) {
           // XXX Test key is valid
-          conn.hostKey = key.key;
-          resolve(key.key);
+          conn.hostKey = response.key;
+          return conn.hostKey;
         });
-      });
     }
 
     function requestMeta() {
-      return new Promise(function(resolve) {
-        var formData = new FormData();
-        formData.append('c', '1');
+      // XXX Make data object with version no. etc.
+      return makeRequest('meta');
+    }
+
+    function makeRequest(path, data) {
+      var formData = new FormData();
+      formData.append('c', '1');
+
+      if (conn.hostKey) {
         formData.append('k', conn.hostKey);
         // XXX s = skey
-        // XXX version no. etc.
+      }
 
-        $.ajax(serverUrl + '/meta', {
-          type: 'POST',
-          contentType: false,
-          processData: false,
-          data: formData
-        }).done(function() {
-          resolve();
-        });
-      });
+      if (data) {
+        var blob = makeBlob({ u: server.username, p: server.password });
+        formData.append('data', blob, 'data');
+      }
+
+      return Promise.cast(
+          $.ajax(serverUrl + '/' + path,
+                 { type: 'POST',
+                   contentType: false,
+                   processData: false,
+                   data: formData
+                 })
+        );
     }
 
     // Makes a blob from object by first JSONifying the object and then
