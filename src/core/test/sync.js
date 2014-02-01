@@ -57,14 +57,14 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
   });
 
   test('Server trailing slash', function() {
-    var conn = new SyncConnection({ url: 'http://localhost/' });
+    var conn = new SyncConnection({ url: 'http://abc/' });
     conn.sync();
-    equal(server.requests[0].url, 'http://localhost/hostKey',
+    equal(server.requests[0].url, 'http://abc/hostKey',
           'allows trailing slash in server URL');
 
-    conn = new SyncConnection({ url: 'http://localhost' });
+    conn = new SyncConnection({ url: 'http://def' });
     conn.sync();
-    equal(server.requests[1].url, 'http://localhost/hostKey',
+    equal(server.requests[1].url, 'http://def/hostKey',
           'allows no trailing slash in server URL');
   });
 
