@@ -11,7 +11,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
       return new SyncConnection(server);
 
     // Strip trailing slash from URL
-    this.serverUrl = (server.url.substr(-1) == '/') ?
+    var serverUrl = (server.url.substr(-1) == '/') ?
                      server.url.substr(0, server.url.length - 1) :
                      server.url;
 
@@ -21,7 +21,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
         // First get host key if we don't already have one
         var maybeGetHostKey = conn.hostKey ?
                               Promise.resolve(conn.hostKey) :
-                              getHostKey(conn);
+                              getHostKey();
         maybeGetHostKey.then(function(hostKey) {
           conn.hostKey = hostKey;
           resolve(conn);
@@ -31,21 +31,20 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
       });
     };
 
-    function getHostKey(conn) {
+    function getHostKey() {
       return new Promise(function(resolve) {
         var formData = new FormData();
         formData.append('c', '1');
         var data = makeBlob({ u: server.username, p: server.password });
         formData.append('data', data, 'data');
 
-        $.ajax(conn.serverUrl + '/hostKey', {
+        $.ajax(serverUrl + '/hostKey', {
           type: 'POST',
           contentType: false,
           processData: false,
           data: formData
         }).done(function(key) {
-          conn.hostKey = key;
-          resolve(conn.hostKey);
+          resolve(key);
         });
       });
     }
