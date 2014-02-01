@@ -5,7 +5,8 @@ require.config({
   paths: {
     core: '../core',
     app: '../app',
-    jquery: 'jquery/jquery-2.0.3'
+    jquery: 'jquery/jquery-2.0.3',
+    promise: 'promise-0.1.1'
   }
 });
 
