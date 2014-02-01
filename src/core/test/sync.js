@@ -72,9 +72,9 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     var conn = new SyncConnection({ url: 'http://localhost/',
                                     username: 'abc',
                                     password: 'def' });
-    equal(conn.status, 'idle');
-    var syncPromise = conn.sync();
-    equal(conn.status, 'logging-in');
+    equal(conn.status, 'idle', 'is initially idle');
+    conn.sync();
+    equal(conn.status, 'logging-in', 'logging-in status');
 
     equal(server.requests[0].method, 'POST', 'has post method');
     equal(server.requests[0].requestBody._data.length, 2,
@@ -92,10 +92,14 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
       server.requests[0].respond(200,
         { 'Content-Type': 'application/json' },
         JSON.stringify({ key: 'ghi' }));
-      return syncPromise;
-    }).then(function(returnedConn) {
-      strictEqual(returnedConn, conn, 'returns connection object');
-      equal(conn.status, 'getting-summary');
+    }).then(function() {
+      equal(conn.status, 'getting-summary', 'getting-summary status');
+      equal(server.requests.length, 2, 'makes next request');
+      equal(server.requests[1].url, 'http://localhost/meta',
+            'next request is meta');
+      deepEqual(server.requests[1].requestBody._data[1],
+                { name: 'k', value: 'ghi', filename: undefined },
+                'uses returned hostKey for next request');
     }).catch(function(err) {
       ok(false, err);
     }).then(function() {

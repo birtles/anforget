@@ -21,14 +21,12 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
 
     conn.sync = function(/*collection, syncLog*/) {
       return new Promise(function(resolve, reject) {
-        // First get host key if we don't already have one
         conn.status = 'logging-in';
-        var maybeGetHostKey = conn.hostKey ?
-                              Promise.resolve(conn.hostKey) :
-                              getHostKey();
-        maybeGetHostKey.then(function(hostKey) {
-          conn.hostKey = hostKey;
+        // First get host key
+        getHostKey().then(function() {
           conn.status = 'getting-summary';
+          return requestMeta();
+        }).then(function() {
           resolve(conn);
         }).catch(function(err) {
           // XXX Write test for this first
@@ -40,6 +38,11 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
 
     function getHostKey() {
       return new Promise(function(resolve) {
+        if (conn.hostKey) {
+          resolve(conn.hostKey);
+          return;
+        }
+
         var formData = new FormData();
         formData.append('c', '1');
         var data = makeBlob({ u: server.username, p: server.password });
@@ -51,7 +54,28 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
           processData: false,
           data: formData
         }).done(function(key) {
-          resolve(key);
+          // XXX Test key is valid
+          conn.hostKey = key.key;
+          resolve(key.key);
+        });
+      });
+    }
+
+    function requestMeta() {
+      return new Promise(function(resolve) {
+        var formData = new FormData();
+        formData.append('c', '1');
+        formData.append('k', conn.hostKey);
+        // XXX s = skey
+        // XXX version no. etc.
+
+        $.ajax(serverUrl + '/meta', {
+          type: 'POST',
+          contentType: false,
+          processData: false,
+          data: formData
+        }).done(function() {
+          resolve();
         });
       });
     }
