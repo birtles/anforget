@@ -155,8 +155,8 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
       // with a different error code. This is easier than producing all the
       // responses needed for the success case and prevents us from accidentally
       // passing due a timeout on a subsequent request.)
-      server.requests[0].respond(200,
-        { 'Content-Type': 'application/json' });
+      server.requests[0].respond(200, { 'Content-Type': 'application/json' },
+        /* no payload = error */);
       syncPromise.then(function() {
         ok(false, 'sync promise should have been rejected');
       }, function(err) {
