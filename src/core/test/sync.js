@@ -155,7 +155,7 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
       // with a different error code. This is easier than producing all the
       // responses needed for the success case and prevents us from accidentally
       // passing due a timeout on a subsequent request.)
-      server.requests[0].respond(200, { 'Content-Type': 'application/json' },
+      server.requests[0].respond(200, { 'Content-Type': 'application/json' }
         /* no payload = error */);
       syncPromise.then(function() {
         ok(false, 'sync promise should have been rejected');
@@ -168,8 +168,37 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     }, 40);
   });
 
-  // XXX Test timeout
-  // XXX Test bad status codes
+  asyncTest('Bad status codes getting host key', function() {
+    var codeMapping = { '403': 'login failed',
+                        '404': 'server error',
+                        '501': 'upgrade needed',
+                        '502': 'server down',
+                        '503': 'server busy',
+                        '504': 'server busy' },
+        conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' }),
+        sequence = Promise.resolve();
+
+    var testCode = function(code, expectedMessage) {
+          sequence.then(function() {
+            var syncPromise = conn.sync();
+            server.requests[server.requests.length-1].respond(code);
+            return syncPromise;
+          }).catch(function (err) {
+            equal(err.message, expectedMessage,
+                  'returns correct message for HTTP code ' + code);
+          });
+        };
+
+    for (var code in codeMapping) {
+      testCode(Number(code), codeMapping[code]);
+    }
+    sequence.then(function() {
+      start();
+    });
+  });
+
   // XXX Test overlapping requests
   // XXX Test for all sorts of errors
   // XXX Test cancelling

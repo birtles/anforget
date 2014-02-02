@@ -71,6 +71,13 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
         formData.append('data', makeBlob(data), 'data');
       }
 
+      // HTTP codes with special meaning
+      var codeMapping = { '403': 'login failed',
+                          '501': 'upgrade needed',
+                          '502': 'server down',
+                          '503': 'server busy',
+                          '504': 'server busy' };
+
       // Promise.cast won't result in a Promise that producing standard Error
       // objects for the fail case which makes it hard to test.
       // Instead we do the cast manually.
@@ -84,14 +91,22 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
                }
               ).then(function(response) {
                 resolve(response);
-              }).fail(function(jqXHR, statusText, err) {
+              }).fail(function(jqXHR, textStatus, err) {
                 if (typeof(err) === 'object') {
-                  err.message = statusText + ': ' + err.message;
+                  err.message = textStatus + ': ' + err.message;
                   reject(err);
                 } else if (typeof(err) === 'string') {
+                  // Map HTTP status codes
+                  if (typeof(jqXHR.status) === 'number' && jqXHR.status) {
+                    if (codeMapping.hasOwnProperty(jqXHR.status.toString())) {
+                      err = codeMapping[jqXHR.status.toString()];
+                    } else {
+                      err = 'server error';
+                    }
+                  }
                   reject(new Error(err));
                 } else {
-                  reject(new Error(statusText));
+                  reject(new Error(textStatus));
                 }
               });
       });
