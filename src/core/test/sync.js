@@ -141,6 +141,33 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     });
   }
 
+  asyncTest('Timeout during host key fetch', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def',
+                                    timeout: 30 });
+    var syncPromise = conn.sync();
+
+    // Wait 40ms (timeout is 30ms)
+    window.setTimeout(function() {
+      // Then send a response that will generate an error
+      // (This way, if timeout is not implemented correctly we will fail but
+      // with a different error code. This is easier than producing all the
+      // responses needed for the success case and prevents us from accidentally
+      // passing due a timeout on a subsequent request.)
+      server.requests[0].respond(200,
+        { 'Content-Type': 'application/json' });
+      syncPromise.then(function() {
+        ok(false, 'sync promise should have been rejected');
+      }, function(err) {
+        equal(conn.status, 'idle', 'returns to idle status after timing out');
+        equal(err.message, 'timeout', 'rejected with timeout message');
+      }).then(function() {
+        start();
+      });
+    }, 40);
+  });
+
   // XXX Test timeout
   // XXX Test bad status codes
   // XXX Test overlapping requests
@@ -198,7 +225,7 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
           resolve(conn.status);
         }
         if (!--tries) {
-          reject('No status change');
+          reject(new Error('No status change'));
         }
         window.setTimeout(retry, 0);
       };

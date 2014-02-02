@@ -16,6 +16,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
     var serverUrl = (server.url.substr(-1) == '/') ?
                      server.url.substr(0, server.url.length - 1) :
                      server.url;
+    var timeout = server.timeout || 20 * 1000;
 
     conn.status = 'idle';
 
@@ -79,7 +80,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
                  contentType: false,
                  processData: false,
                  data: formData,
-                 timeout: 100
+                 timeout: timeout
                }
               ).then(function(response) {
                 resolve(response);
