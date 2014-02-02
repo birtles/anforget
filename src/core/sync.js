@@ -29,8 +29,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
         }).then(function() {
           resolve(conn);
         }).catch(function(err) {
-          // XXX Write test for this first
-          // conn.status = 'idle';
+          conn.status = 'idle';
           reject(err);
         });
       });
@@ -44,7 +43,10 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
 
       return makeRequest('hostKey', { u: server.username, p: server.password })
         .then(function(response) {
-          // XXX Test key is valid
+          if (typeof(response) != 'object' ||
+              typeof(response.key) != 'string') {
+            throw new Error('bad host key');
+          }
           conn.hostKey = response.key;
           return conn.hostKey;
         });
@@ -65,18 +67,33 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
       }
 
       if (data) {
-        var blob = makeBlob({ u: server.username, p: server.password });
-        formData.append('data', blob, 'data');
+        formData.append('data', makeBlob(data), 'data');
       }
 
-      return Promise.cast(
-          $.ajax(serverUrl + '/' + path,
-                 { type: 'POST',
-                   contentType: false,
-                   processData: false,
-                   data: formData
-                 })
-        );
+      // Promise.cast won't result in a Promise that producing standard Error
+      // objects for the fail case which makes it hard to test.
+      // Instead we do the cast manually.
+      return new Promise(function(resolve, reject) {
+        $.ajax(serverUrl + '/' + path,
+               { type: 'POST',
+                 contentType: false,
+                 processData: false,
+                 data: formData,
+                 timeout: 100
+               }
+              ).then(function(response) {
+                resolve(response);
+              }).fail(function(jqXHR, statusText, err) {
+                if (typeof(err) === 'object') {
+                  err.message = statusText + ': ' + err.message;
+                  reject(err);
+                } else if (typeof(err) === 'string') {
+                  reject(new Error(err));
+                } else {
+                  reject(new Error(statusText));
+                }
+              });
+      });
     }
 
     // Makes a blob from object by first JSONifying the object and then

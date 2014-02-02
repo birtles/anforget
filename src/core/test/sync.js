@@ -99,7 +99,47 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     });
   });
 
+  asyncTest('Host key is not JSON', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' });
+    var syncPromise = conn.sync();
+    server.requests[0].respond(200,
+      { 'Content-Type': 'application/json' }, 'ghi');
+    syncPromise.then(function() {
+      ok(false, 'error not thrown for non-JSON host key');
+    }).catch(function(err) {
+      ok(err.message.toLowerCase().indexOf('parsererror') === 0,
+         'throws parse error for non-JSON host key');
+      equal(conn.status, 'idle', 'idle status after error');
+    }).then(function() {
+      start();
+    });
+  });
+
+  asyncTest('Host key has bad structure', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' });
+    var syncPromise = conn.sync();
+    server.requests[0].respond(200,
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ k: 'ghi' })); // <-- should be 'key' not 'k'
+    syncPromise.then(function() {
+      ok(false, 'error not thrown for bad structure host key');
+    }).catch(function(err) {
+      equal(err.message.toLowerCase(), 'bad host key',
+            'throws error for bad structure host key');
+      equal(conn.status, 'idle', 'idle status after error');
+    }).then(function() {
+      start();
+    });
+  });
+
+  // XXX Test host key that is false/array etc.
+  // XXX Test empty response
   // XXX Test timeout
+  // XXX Test bad status codes
   // XXX Test overlapping requests
   // XXX Test for all sorts of errors
   // XXX Test cancelling
