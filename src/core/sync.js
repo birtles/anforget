@@ -10,13 +10,13 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
     if (!(this instanceof SyncConnection))
       return new SyncConnection(server);
 
-    var conn = this;
-
-    // Strip trailing slash from URL
-    var serverUrl = (server.url.substr(-1) == '/') ?
+    var conn = this,
+        xhr = null,
+        // Strip trailing slash from URL
+        serverUrl = (server.url.substr(-1) == '/') ?
                      server.url.substr(0, server.url.length - 1) :
-                     server.url;
-    var timeout = server.timeout || 20 * 1000;
+                     server.url,
+        timeout = server.timeout || 20 * 1000;
 
     conn.status = 'idle';
 
@@ -82,33 +82,35 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
       // objects for the fail case which makes it hard to test.
       // Instead we do the cast manually.
       return new Promise(function(resolve, reject) {
-        $.ajax(serverUrl + '/' + path,
+        xhr = $.ajax(serverUrl + '/' + path,
                { type: 'POST',
                  contentType: false,
                  processData: false,
                  data: formData,
                  timeout: timeout
-               }
-              ).then(function(response) {
-                resolve(response);
-              }).fail(function(jqXHR, textStatus, err) {
-                if (typeof(err) === 'object') {
-                  err.message = textStatus + ': ' + err.message;
-                  reject(err);
-                } else if (typeof(err) === 'string') {
-                  // Map HTTP status codes
-                  if (typeof(jqXHR.status) === 'number' && jqXHR.status) {
-                    if (codeMapping.hasOwnProperty(jqXHR.status.toString())) {
-                      err = codeMapping[jqXHR.status.toString()];
-                    } else {
-                      err = 'server error';
-                    }
-                  }
-                  reject(new Error(err));
-                } else {
-                  reject(new Error(textStatus));
-                }
-              });
+               });
+        xhr.then(function(response) {
+          resolve(response);
+        }).fail(function(jqXHR, textStatus, err) {
+          if (typeof(err) === 'object') {
+            err.message = textStatus + ': ' + err.message;
+            reject(err);
+          } else if (typeof(err) === 'string') {
+            // Map HTTP status codes
+            if (typeof(jqXHR.status) === 'number' && jqXHR.status) {
+              if (codeMapping.hasOwnProperty(jqXHR.status.toString())) {
+                err = codeMapping[jqXHR.status.toString()];
+              } else {
+                err = 'server error';
+              }
+            }
+            reject(new Error(err));
+          } else {
+            reject(new Error(textStatus));
+          }
+        }).always(function() {
+          xhr = null;
+        });
       });
     }
 
@@ -146,7 +148,11 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
     }
 
     conn.cancel = function () {
-      // XXX Write me
+      if (xhr) {
+        xhr.abort();
+        xhr = null;
+        conn.status = 'idle';
+      }
     };
   };
 });

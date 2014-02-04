@@ -199,9 +199,37 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     });
   });
 
+  asyncTest('Cancel host key fetch', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' });
+    var syncPromise = conn.sync();
+    conn.cancel();
+    equal(conn.status, 'idle', 'goes to idle state after cancelling');
+
+    // Respond to request anyway
+    server.requests[0].respond(200,
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ key: 'ghi' }));
+
+    // Then wait to make sure there's no status change
+    waitForStatusChange(conn).then(function() {
+      ok(false, 'doesn\'t continue sync');
+    }).catch(function(err) {
+      ok(err.message, 'No status change', 'status does not change');
+    }).then(function() {
+      start();
+    });
+
+    // Check the sync promise rejects
+    syncPromise.then(function() {
+      ok(false, 'promise is not resolved');
+    }).catch(function(err) {
+      equal(err.message, 'abort', 'rejects promise with abort message');
+    });
+  });
+
   // XXX Test overlapping requests
-  // XXX Test for all sorts of errors
-  // XXX Test cancelling
   // XXX Test cancelling at each stage
   // XXX Test cancelling when idle
 
