@@ -16,7 +16,10 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
         serverUrl = (server.url.substr(-1) == '/') ?
                      server.url.substr(0, server.url.length - 1) :
                      server.url,
-        timeout = server.timeout || 20 * 1000;
+        timeout = server.timeout || 20 * 1000,
+        clientKey = getClientKey(),
+        syncVer = 8,
+        clientVer = 'ankidesktop,2.0.22,win:Vista';
 
     conn.status = 'idle';
 
@@ -53,9 +56,22 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
         });
     }
 
+    function getClientKey() {
+      // This just needs to return an 8-character hex string
+      var array = new Uint32Array(1);
+      window.crypto.getRandomValues(array);
+      return zeroPad(array[0].toString(16), 8);
+    }
+
+    function zeroPad(str, length) {
+      if (str.length >= length)
+        return str;
+      var pad = new Array(length + 1).join('0');
+      return (pad + str).slice(-pad.length);
+    }
+
     function requestMeta() {
-      // XXX Make data object with version no. etc.
-      return makeRequest('meta');
+      return makeRequest('meta', { v: syncVer, cv: clientVer });
     }
 
     function makeRequest(path, data) {
@@ -64,7 +80,7 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
 
       if (conn.hostKey) {
         formData.append('k', conn.hostKey);
-        // XXX s = skey
+        formData.append('s', clientKey);
       }
 
       if (data) {

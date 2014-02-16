@@ -229,6 +229,48 @@ define(['core/sync', 'sinonjs', 'gzip', 'promise'],
     });
   });
 
+  asyncTest('Get meta summary', function() {
+    var conn = new SyncConnection({ url: 'http://localhost/',
+                                    username: 'abc',
+                                    password: 'def' });
+    conn.sync();
+
+    server.requests[0].respond(200,
+      { 'Content-Type': 'application/json' },
+      JSON.stringify({ key: 'ghi' }));
+    waitForStatusChange(conn).then(function() {
+      var metaReq = server.requests[1];
+      equal(metaReq.url, 'http://localhost/meta', 'calls meta URL');
+      equal(metaReq.method, 'POST', 'has post method');
+      equal(metaReq.requestBody._data.length, 4,
+        'has four items in the request');
+      deepEqual(metaReq.requestBody._data[0],
+                { name: 'c', value: '1', filename: undefined },
+                'has correct c chunk');
+      deepEqual(metaReq.requestBody._data[1],
+                { name: 'k', value: 'ghi', filename: undefined },
+                'has correct k chunk');
+      var sChunk = metaReq.requestBody._data[2];
+      strictEqual(sChunk.name, 's', 'has s chunk');
+      ok(/^[a-f0-9]{8}$/.test(sChunk.value), 'has valid client key' +
+         ' (got: ' + sChunk.value + ')');
+      strictEqual(sChunk.filename, undefined, 's chunk filename is not set');
+      var dataChunk = metaReq.requestBody._data[3];
+      deepEqual({ name: dataChunk.name, filename: dataChunk.filename },
+         { name: 'data', filename: 'data' },
+         'data chunk properties set correctly');
+      return readBlob(dataChunk.value);
+    }).then(function(obj) {
+      ok(typeof(obj.v) == 'number' && obj.v > 0, 'has valid sync version');
+      ok(/^ankidesktop,[0-9\.]+,\w+:.+?$/.test(obj.cv),
+         'has valid client version');
+    }).catch(function(err) {
+      ok(false, err);
+    }).then(function() {
+      start();
+    });
+  });
+
   // XXX Test overlapping requests
   // XXX Test cancelling at each stage
   // XXX Test cancelling when idle
