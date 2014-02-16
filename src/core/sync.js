@@ -59,7 +59,8 @@ define(['jquery', 'gzip', 'promise'], function($, gzip) {
     function getClientKey() {
       // This just needs to return an 8-character hex string
       var array = new Uint32Array(1);
-      window.crypto.getRandomValues(array);
+      var crypto = window.crypto || window.msCrypto;
+      crypto.getRandomValues(array);
       return zeroPad(array[0].toString(16), 8);
     }
 
